@@ -1,0 +1,6 @@
+/.*/
+/runtime/
+/vendor/
+/composer.lock
+/.env
+*.log
