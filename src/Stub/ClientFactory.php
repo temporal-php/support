@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace Temporal\Sugar\Factory;
+namespace Temporal\Sugar\Stub;
 
 use DateInterval;
 use Temporal\Client\WorkflowClientInterface;
 use Temporal\Client\WorkflowOptions;
 use Temporal\Common\IdReusePolicy;
-use Temporal\Common\RetryOptions;
 use Temporal\Internal\Client\WorkflowProxy;
+use Temporal\Sugar\Internal\RetryOptions;
 use Throwable;
 
 /**
  * Note: mustn't be used in a Workflow context.
  */
-final class ClientWorkflow
+final class ClientFactory
 {
     /**
      * @template T of object
@@ -38,27 +38,27 @@ final class ClientWorkflow
      * @param list<class-string<Throwable>> $nonRetryables Non-retriable errors. Temporal server will stop retry
      *        if error type matches this list.
      * @param DateInterval|string|int $executionTimeout The maximum time that parent workflow is willing to wait
-     *          for a child execution (which includes retries and continue as new calls).
-     *          If exceeded the child is automatically terminated by the Temporal service.
-     *          Int value in seconds.
+     *        for a child execution (which includes retries and continue as new calls).
+     *        If exceeded the child is automatically terminated by the Temporal service.
+     *        Int value in seconds.
      * @param DateInterval|string|int $runTimeout The time after which workflow run is automatically terminated by
      *        the Temporal service.
      *        Do not rely on the run timeout for business level timeouts.
      *        It is preferred to use in workflow timers for this purpose.
      *        Int value in seconds.
+     * @param int<10, 60> $taskTimeout Maximum execution time of a single workflow task. Int value in seconds.
+     *        Default is 10 seconds. The maximum accepted value is 60 seconds.
      * @param DateInterval|string|int $startDelay Time to wait before dispatching the first Workflow task.
      *        If the Workflow gets a Signal before the delay, a Workflow task will be dispatched and the rest
      *        of the delay will be ignored. A Signal from {@see WorkflowClientInterface::startWithSignal()}
      *        won't trigger a workflow task. Cannot be set the same time as a $cronSchedule.
      *        Int value in seconds.
-     * @param int<10, 60> $taskTimeout Maximum execution time of a single workflow task. Int value in seconds.
-     *        Default is 10 seconds. The maximum accepted value is 60 seconds.
      * @param bool $eagerStart Eager Workflow Dispatch is a mechanism that minimizes the duration from
      *        starting a workflow to the processing of the first workflow task, making Temporal more suitable
      *        for latency sensitive applications.
      *        Eager Workflow Dispatch can be enabled if the server supports it and a local worker is available
      *        the task is fed directly to the worker.
-     * @param string|null $workflowId If null, then UUID will be generated.
+     * @param \Stringable|string|null $workflowId If null, then UUID will be generated.
      * @param string|null $cronSchedule Optional cron schedule for workflow. {@see CronSchedule::$interval} for
      *        more info about cron format.
      * @param array<non-empty-string, mixed> $searchAttributes Specifies additional indexed information in result
@@ -67,7 +67,7 @@ final class ClientWorkflow
      *
      * @return T|WorkflowProxy
      */
-    public static function workflowStub(
+    public static function workflow(
         WorkflowClientInterface $workflowClient,
         string $workflow,
         ?string $taskQueue = null,
@@ -81,19 +81,20 @@ final class ClientWorkflow
         int $taskTimeout = 10,
         \DateInterval|string|int $startDelay = 0,
         bool $eagerStart = false,
-        ?string $workflowId = null,
+        \Stringable|string|null $workflowId = null,
         IdReusePolicy $workflowIdReusePolicy = IdReusePolicy::Unspecified,
         ?string $cronSchedule = null,
         array $searchAttributes = [],
         array $memo = [],
     ): object {
         // Retry options
-        $retryOptions = RetryOptions::new();
-        $retryAttempts === 0 or $retryOptions = $retryOptions->withMaximumAttempts($retryAttempts);
-        $retryInitInterval === 0 or $retryOptions = $retryOptions->withInitialInterval($retryInitInterval);
-        $retryMaxInterval === 0 or $retryOptions = $retryOptions->withMaximumInterval($retryMaxInterval);
-        $retryBackoff >= 1.0 and $retryOptions = $retryOptions->withBackoffCoefficient($retryBackoff);
-        $nonRetryables === 0 or $retryOptions = $retryOptions->withNonRetryableExceptions($nonRetryables);
+        $retryOptions = RetryOptions::create(
+            $retryAttempts,
+            $retryInitInterval,
+            $retryMaxInterval,
+            $retryBackoff,
+            $nonRetryables,
+        );
 
         $options = WorkflowOptions::new()->withRetryOptions($retryOptions);
         $taskQueue === null or $options = $options->withTaskQueue($taskQueue);
@@ -106,7 +107,7 @@ final class ClientWorkflow
         $runTimeout === 0 or $options = $options->withWorkflowRunTimeout($executionTimeout);
         $taskTimeout > 10 and $options = $options->withWorkflowTaskTimeout(\max(60, $taskTimeout));
         // Workflow ID
-        $workflowId === null or $options = $options->withWorkflowId($workflowId);
+        $workflowId === null or $options = $options->withWorkflowId((string)$workflowId);
         $workflowIdReusePolicy === IdReusePolicy::Unspecified or $options = $options
             ->withWorkflowIdReusePolicy($workflowIdReusePolicy);
         // Metadata
