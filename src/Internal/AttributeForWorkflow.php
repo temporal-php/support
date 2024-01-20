@@ -8,6 +8,6 @@ namespace Temporal\Sugar\Internal;
  * @internal
  * @psalm-internal Temporal\Sugar
  */
-interface WorkflowAttribute
+interface AttributeForWorkflow
 {
 }

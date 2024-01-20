@@ -27,10 +27,7 @@ final class AttributeReader
             return [];
         }
 
-        /** @var array<class-string, array<class-string, list<object>>> $cache */
-        static $cache = [];
-
-        $result = $cache[$class] ?? self::initAttributes($reflection, $attributes);
+        $result = self::fetchAttributes($reflection, $attributes);
 
         if (!$inheritance) {
             return $result;
@@ -62,16 +59,28 @@ final class AttributeReader
      * @param array<class-string> $filter
      * @return array<class-string, list<object>>
      */
-    private static function initAttributes(\ReflectionClass $reflection, array $filter): array
+    private static function fetchAttributes(\ReflectionClass $reflection, array $filter): array
     {
+        $className = $reflection->getName();
+        /** @var array<class-string, array<class-string, list<object>>> $cache */
+        static $cache = [];
+
         $result = [];
-        foreach ($reflection->getAttributes() as $attribute) {
-            $instance = $attribute->newInstance();
-            foreach ($filter as $attributeClass) {
-                if ($instance instanceof $attributeClass) {
-                    $result[$attributeClass][] = $instance;
-                }
+        $cache[$className] ??= [];
+        $classAttrs = &$cache[$className];
+
+        foreach ($filter as $attributeClass) {
+            if (\array_key_exists($attributeClass, $classAttrs)) {
+                $result[$attributeClass] = $classAttrs[$attributeClass];
+                continue;
             }
+
+            $attrs = $reflection->getAttributes($attributeClass, \ReflectionAttribute::IS_INSTANCEOF);
+            $result[$attributeClass] = $classAttrs[$attributeClass] = \array_map(
+                static fn(\ReflectionAttribute $attribute) => $attribute->newInstance(),
+                $attrs
+            );
+            unset($attrs);
         }
 
         return $result;
