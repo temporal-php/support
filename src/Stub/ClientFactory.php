@@ -105,7 +105,7 @@ final class ClientFactory
         // Timeouts
         $executionTimeout === 0 or $options = $options->withWorkflowExecutionTimeout($executionTimeout);
         $runTimeout === 0 or $options = $options->withWorkflowRunTimeout($executionTimeout);
-        $taskTimeout > 10 and $options = $options->withWorkflowTaskTimeout(\max(60, $taskTimeout));
+        $taskTimeout !== 10 and $options = $options->withWorkflowTaskTimeout(\max(60, $taskTimeout));
         // Workflow ID
         $workflowId === null or $options = $options->withWorkflowId((string)$workflowId);
         $workflowIdReusePolicy === IdReusePolicy::Unspecified or $options = $options
