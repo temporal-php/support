@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Temporal\Sugar\Attribute;
 
-use Temporal\Sugar\Internal\AttributeForActivity;
-use Temporal\Sugar\Internal\AttributeForWorkflow;
+use Temporal\Sugar\Internal\Attribute\AttributeForActivity;
+use Temporal\Sugar\Internal\Attribute\AttributeForWorkflow;
 
 #[\Attribute(\Attribute::TARGET_CLASS)]
 final class TaskQueue implements AttributeForWorkflow, AttributeForActivity

@@ -7,6 +7,10 @@ namespace Temporal\Sugar\Factory;
 use DateInterval;
 use Temporal\Activity\ActivityOptions;
 use Temporal\Internal\Workflow\ActivityProxy;
+use Temporal\Sugar\Attribute\RetryPolicy;
+use Temporal\Sugar\Attribute\TaskQueue;
+use Temporal\Sugar\Internal\Attribute\AttributeForActivity;
+use Temporal\Sugar\Internal\Attribute\AttributeReader;
 use Temporal\Sugar\Internal\RetryOptions;
 use Temporal\Workflow;
 use Throwable;
@@ -20,7 +24,7 @@ final class ActivityStub
      *
      * @param class-string<T> $activity
      * @param non-empty-string|null $taskQueue
-     * @param int<0, max> $retryAttempts Maximum number of attempts. When exceeded the retries stop even
+     * @param int<0, max>|null $retryAttempts Maximum number of attempts. When exceeded the retries stop even
      *        if not expired yet. If not set or set to 0, it means unlimited, and rely on activity
      *        {@see ActivityOptions::$scheduleToCloseTimeout} to stop.
      * @param DateInterval|string|int|null $retryInitInterval Backoff interval for the first retry.
@@ -57,7 +61,7 @@ final class ActivityStub
     public static function activity(
         string $activity,
         ?string $taskQueue = null,
-        int $retryAttempts = 0,
+        ?int $retryAttempts = null,
         \DateInterval|string|int|null $retryInitInterval = null,
         \DateInterval|string|int|null $retryMaxInterval = null,
         ?float $retryBackoff = null,
@@ -69,17 +73,21 @@ final class ActivityStub
         \Stringable|string|null $activityId = null,
         int $cancellationType = 0,
     ): object {
+        $attributes = self::readAttributes($activity);
+
         // Retry options
         $retryOptions = RetryOptions::create(
-            $retryAttempts,
-            $retryInitInterval,
-            $retryMaxInterval,
-            $retryBackoff,
-            $nonRetryables,
+            retryAttempts: $retryAttempts,
+            retryInitInterval: $retryInitInterval,
+            retryMaxInterval: $retryMaxInterval,
+            retryBackoff: $retryBackoff,
+            nonRetryables: $nonRetryables,
+            attribute: $attributes[RetryPolicy::class] ?? null,
         );
 
         $options = ActivityOptions::new()->withRetryOptions($retryOptions);
 
+        $taskQueue ??= isset($attributes[TaskQueue::class][0]) ? $attributes[TaskQueue::class][0]->name : null;
         $taskQueue === null or $options = $options->withTaskQueue($taskQueue);
         // Timeouts
         $scheduleToStartTimeout === 0 or $options = $options->withScheduleToStartTimeout($scheduleToStartTimeout);
@@ -91,5 +99,14 @@ final class ActivityStub
         $cancellationType === null or $options = $options->withCancellationType($cancellationType);
 
         return Workflow::newActivityStub($activity, $options);
+    }
+
+    /**
+     * @param class-string $class
+     * @return array<class-string<AttributeForActivity>, AttributeForActivity>
+     */
+    private static function readAttributes(string $class): array
+    {
+        return AttributeReader::fromClass($class, [AttributeForActivity::class]);
     }
 }

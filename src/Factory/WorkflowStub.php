@@ -10,6 +10,9 @@ use Temporal\Client\WorkflowOptions;
 use Temporal\Common\IdReusePolicy;
 use Temporal\Internal\Client\WorkflowProxy;
 use Temporal\Internal\Workflow\ChildWorkflowProxy;
+use Temporal\Sugar\Attribute\RetryPolicy;
+use Temporal\Sugar\Internal\Attribute\AttributeForWorkflow;
+use Temporal\Sugar\Internal\Attribute\AttributeReader;
 use Temporal\Sugar\Internal\RetryOptions;
 use Temporal\Workflow;
 use Temporal\Workflow\ChildWorkflowCancellationType as ChildCancelType;
@@ -90,13 +93,16 @@ final class WorkflowStub
         array $searchAttributes = [],
         array $memo = [],
     ): object {
+        $attributes = self::readAttributes($workflow);
+
         // Retry options
         $retryOptions = RetryOptions::create(
-            $retryAttempts,
-            $retryInitInterval,
-            $retryMaxInterval,
-            $retryBackoff,
-            $nonRetryables,
+            retryAttempts: $retryAttempts,
+            retryInitInterval: $retryInitInterval,
+            retryMaxInterval: $retryMaxInterval,
+            retryBackoff: $retryBackoff,
+            nonRetryables: $nonRetryables,
+            attribute: $attributes[RetryPolicy::class] ?? null,
         );
 
         $options = WorkflowOptions::new()->withRetryOptions($retryOptions);
@@ -221,5 +227,14 @@ final class WorkflowStub
         $memo === [] or $options = $options->withMemo($memo);
 
         return Workflow::newChildWorkflowStub($workflow, $options);
+    }
+
+    /**
+     * @param class-string $class
+     * @return array<class-string<AttributeForWorkflow>, AttributeForWorkflow>
+     */
+    private static function readAttributes(string $class): array
+    {
+        return AttributeReader::fromClass($class, [AttributeForWorkflow::class]);
     }
 }
