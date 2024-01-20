@@ -9,6 +9,7 @@ use Temporal\Activity\ActivityOptions;
 use Temporal\Internal\Workflow\ActivityProxy;
 use Temporal\Sugar\Attribute\RetryPolicy;
 use Temporal\Sugar\Attribute\TaskQueue;
+use Temporal\Sugar\Internal\Attribute\AttributeCollection;
 use Temporal\Sugar\Internal\Attribute\AttributeForActivity;
 use Temporal\Sugar\Internal\Attribute\AttributeReader;
 use Temporal\Sugar\Internal\RetryOptions;
@@ -82,12 +83,12 @@ final class ActivityStub
             retryMaxInterval: $retryMaxInterval,
             retryBackoff: $retryBackoff,
             nonRetryables: $nonRetryables,
-            attribute: $attributes[RetryPolicy::class] ?? null,
+            attribute: $attributes->first(RetryPolicy::class),
         );
 
         $options = ActivityOptions::new()->withRetryOptions($retryOptions);
 
-        $taskQueue ??= isset($attributes[TaskQueue::class][0]) ? $attributes[TaskQueue::class][0]->name : null;
+        $taskQueue ??= $attributes->first(TaskQueue::class)?->name;
         $taskQueue === null or $options = $options->withTaskQueue($taskQueue);
         // Timeouts
         $scheduleToStartTimeout === 0 or $options = $options->withScheduleToStartTimeout($scheduleToStartTimeout);
@@ -102,11 +103,10 @@ final class ActivityStub
     }
 
     /**
-     * @param class-string $class
-     * @return array<class-string<AttributeForActivity>, AttributeForActivity>
+     * @param class-string $class Activity class name.
      */
-    private static function readAttributes(string $class): array
+    private static function readAttributes(string $class): AttributeCollection
     {
-        return AttributeReader::fromClass($class, [AttributeForActivity::class]);
+        return AttributeReader::collectionFromClass($class, [AttributeForActivity::class]);
     }
 }

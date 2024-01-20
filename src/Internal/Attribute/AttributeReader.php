@@ -12,10 +12,24 @@ final class AttributeReader
     /**
      * @param class-string $class
      * @param list<class-string> $attributes
+     */
+    public static function collectionFromClass(
+        string $class,
+        array $attributes,
+        bool $merge = true,
+        bool $inheritance = true,
+        bool $interfaces = true,
+    ): AttributeCollection {
+        return new AttributeCollection(self::arrayFromClass($class, $attributes, $merge, $inheritance, $interfaces));
+    }
+
+    /**
+     * @param class-string $class
+     * @param list<class-string> $attributes
      *
      * @return array<class-string, list<object>>
      */
-    public static function fromClass(
+    public static function arrayFromClass(
         string $class,
         array $attributes,
         bool $merge = true,
@@ -34,7 +48,7 @@ final class AttributeReader
         }
 
         if ($parent = $reflection->getParentClass()) {
-            $attrs = self::fromClass($parent->getName(), $attributes, $merge, true, false);
+            $attrs = self::arrayFromClass($parent->getName(), $attributes, $merge, true, false);
             $result = $merge
                 ? \array_merge_recursive($result, $attrs)
                 : $result + $attrs;
@@ -45,7 +59,7 @@ final class AttributeReader
         }
 
         foreach (self::sortInterfaces($reflection) as $interface) {
-            $attrs = self::fromClass($interface, $attributes, $merge, false, false);
+            $attrs = self::arrayFromClass($interface, $attributes, $merge, false, false);
             $result = $merge
                 ? \array_merge_recursive($result, $attrs)
                 : $result + $attrs;

@@ -11,6 +11,8 @@ use Temporal\Common\IdReusePolicy;
 use Temporal\Internal\Client\WorkflowProxy;
 use Temporal\Internal\Workflow\ChildWorkflowProxy;
 use Temporal\Sugar\Attribute\RetryPolicy;
+use Temporal\Sugar\Attribute\TaskQueue;
+use Temporal\Sugar\Internal\Attribute\AttributeCollection;
 use Temporal\Sugar\Internal\Attribute\AttributeForWorkflow;
 use Temporal\Sugar\Internal\Attribute\AttributeReader;
 use Temporal\Sugar\Internal\RetryOptions;
@@ -28,7 +30,7 @@ final class WorkflowStub
      *
      * @param class-string<T> $workflow
      * @param non-empty-string|null $taskQueue
-     * @param int<0, max> $retryAttempts Maximum number of attempts. When exceeded the retries stop even
+     * @param int<0, max>|null $retryAttempts Maximum number of attempts. When exceeded the retries stop even
      *        if not expired yet. If not set or set to 0, it means unlimited, and rely on activity
      *        {@see ActivityOptions::$scheduleToCloseTimeout} to stop.
      * @param DateInterval|string|int|null $retryInitInterval Backoff interval for the first retry.
@@ -77,7 +79,7 @@ final class WorkflowStub
         WorkflowClientInterface $workflowClient,
         string $workflow,
         ?string $taskQueue = null,
-        int $retryAttempts = 0,
+        ?int $retryAttempts = null,
         \DateInterval|string|int|null $retryInitInterval = null,
         \DateInterval|string|int|null $retryMaxInterval = null,
         ?float $retryBackoff = null,
@@ -102,11 +104,11 @@ final class WorkflowStub
             retryMaxInterval: $retryMaxInterval,
             retryBackoff: $retryBackoff,
             nonRetryables: $nonRetryables,
-            attribute: $attributes[RetryPolicy::class] ?? null,
+            attribute: $attributes->first(RetryPolicy::class),
         );
 
         $options = WorkflowOptions::new()->withRetryOptions($retryOptions);
-        $taskQueue === null or $options = $options->withTaskQueue($taskQueue);
+        $taskQueue ??= $attributes->first(TaskQueue::class)?->name;
         // Start options
         $startDelay === 0 or $options = $options->withWorkflowStartDelay($startDelay);
         $eagerStart and $options = $options->withEagerStart(true);
@@ -135,7 +137,7 @@ final class WorkflowStub
      * @param non-empty-string|null $taskQueue Task queue to use for workflow tasks. It should match a task queue
      *        specified when creating a {@see Worker} that hosts the workflow code.
      * @param non-empty-string|null $namespace Specify namespace in which workflow should be started.
-     * @param int<0, max> $retryAttempts Maximum number of attempts. When exceeded the retries stop even
+     * @param int<0, max>|null $retryAttempts Maximum number of attempts. When exceeded the retries stop even
      *        if not expired yet. If not set or set to 0, it means unlimited, and rely on activity
      *        {@see ActivityOptions::$scheduleToCloseTimeout} to stop.
      * @param DateInterval|string|int|null $retryInitInterval Backoff interval for the first retry.
@@ -178,7 +180,7 @@ final class WorkflowStub
         string $workflow,
         ?string $taskQueue = null,
         ?string $namespace = null,
-        int $retryAttempts = 0,
+        ?int $retryAttempts = null,
         \DateInterval|string|int|null $retryInitInterval = null,
         \DateInterval|string|int|null $retryMaxInterval = null,
         ?float $retryBackoff = null,
@@ -194,6 +196,8 @@ final class WorkflowStub
         array $searchAttributes = [],
         array $memo = [],
     ): object {
+        $attributes = self::readAttributes($workflow);
+
         // Retry options
         $retryOptions = RetryOptions::create(
             $retryAttempts,
@@ -201,10 +205,12 @@ final class WorkflowStub
             $retryMaxInterval,
             $retryBackoff,
             $nonRetryables,
+            attribute: $attributes->first(RetryPolicy::class),
         );
 
         $options = Workflow\ChildWorkflowOptions::new()->withRetryOptions($retryOptions);
 
+        $taskQueue ??= $attributes->first(TaskQueue::class)?->name;
         $taskQueue === null or $options = $options->withTaskQueue($taskQueue);
         $namespace === null or $options = $options->withNamespace($namespace);
         // Start and close options
@@ -230,11 +236,10 @@ final class WorkflowStub
     }
 
     /**
-     * @param class-string $class
-     * @return array<class-string<AttributeForWorkflow>, AttributeForWorkflow>
+     * @param class-string $class Workflow class name.
      */
-    private static function readAttributes(string $class): array
+    private static function readAttributes(string $class): AttributeCollection
     {
-        return AttributeReader::fromClass($class, [AttributeForWorkflow::class]);
+        return AttributeReader::collectionFromClass($class, [AttributeForWorkflow::class]);
     }
 }

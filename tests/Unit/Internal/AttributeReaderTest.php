@@ -12,7 +12,7 @@ class AttributeReaderTest extends TestCase
 {
     public function testFromClass(): void
     {
-        $result = AttributeReader::fromClass(
+        $result = AttributeReader::arrayFromClass(
             Stub\Attributed\SimpleClass::class,
             [TaskQueue::class]
         );
@@ -26,7 +26,7 @@ class AttributeReaderTest extends TestCase
 
     public function testFromExtendedClassWithInheritanceWithMerge(): void
     {
-        $result = AttributeReader::fromClass(
+        $result = AttributeReader::arrayFromClass(
             Stub\Attributed\ExtendedAttributed::class,
             [TaskQueue::class],
             merge: true,
@@ -47,7 +47,7 @@ class AttributeReaderTest extends TestCase
 
     public function testFromInterfaceWithInheritance(): void
     {
-        $result = AttributeReader::fromClass(
+        $result = AttributeReader::arrayFromClass(
             Stub\Attributed\InterfaceAttributed::class,
             [TaskQueue::class],
             merge: true,
