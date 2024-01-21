@@ -34,7 +34,7 @@ final class RetryPolicy implements AttributeForWorkflow, AttributeForActivity
         public readonly \DateInterval|string|int|null $initInterval = null,
         public readonly \DateInterval|string|int|null $maxInterval = null,
         public readonly ?float $backoff = null,
-        public readonly array $nonRetryables = []
+        public readonly array $nonRetryables = [],
     ) {
     }
 }

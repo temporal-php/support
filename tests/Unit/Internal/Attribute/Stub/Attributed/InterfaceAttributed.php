@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Temporal\Sugar\Tests\Unit\Internal\Stub\Attributed;
+namespace Temporal\Sugar\Tests\Unit\Internal\Attribute\Stub\Attributed;
 
 use Temporal\Sugar\Attribute\TaskQueue;
 

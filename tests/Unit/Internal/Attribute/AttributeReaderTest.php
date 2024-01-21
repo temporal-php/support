@@ -2,18 +2,19 @@
 
 declare(strict_types=1);
 
-namespace Temporal\Sugar\Tests\Unit\Internal;
+namespace Temporal\Sugar\Tests\Unit\Internal\Attribute;
 
 use PHPUnit\Framework\TestCase;
 use Temporal\Sugar\Attribute\TaskQueue;
 use Temporal\Sugar\Internal\Attribute\AttributeReader;
+use Temporal\Sugar\Tests\Unit\Internal\Attribute;
 
 class AttributeReaderTest extends TestCase
 {
     public function testFromClass(): void
     {
         $result = AttributeReader::arrayFromClass(
-            Stub\Attributed\SimpleClass::class,
+            Attribute\Stub\Attributed\SimpleClass::class,
             [TaskQueue::class]
         );
 
@@ -27,7 +28,7 @@ class AttributeReaderTest extends TestCase
     public function testFromExtendedClassWithInheritanceWithMerge(): void
     {
         $result = AttributeReader::arrayFromClass(
-            Stub\Attributed\ExtendedAttributed::class,
+            Attribute\Stub\Attributed\ExtendedAttributed::class,
             [TaskQueue::class],
             merge: true,
         );
@@ -48,7 +49,7 @@ class AttributeReaderTest extends TestCase
     public function testFromInterfaceWithInheritance(): void
     {
         $result = AttributeReader::arrayFromClass(
-            Stub\Attributed\InterfaceAttributed::class,
+            Attribute\Stub\Attributed\InterfaceAttributed::class,
             [TaskQueue::class],
             merge: true,
         );
