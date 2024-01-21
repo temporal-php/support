@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Temporal\Sugar\Internal\Attribute;
+namespace Temporal\Support\Internal\Attribute;
 
 /**
  * @internal
- * @psalm-internal Temporal\Sugar
+ * @psalm-internal Temporal\Support
  */
 interface AttributeForWorkflow
 {

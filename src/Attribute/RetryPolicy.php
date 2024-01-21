@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Temporal\Sugar\Attribute;
+namespace Temporal\Support\Attribute;
 
 use DateInterval;
-use Temporal\Sugar\Internal\Attribute\AttributeForActivity;
-use Temporal\Sugar\Internal\Attribute\AttributeForWorkflow;
+use Temporal\Support\Internal\Attribute\AttributeForActivity;
+use Temporal\Support\Internal\Attribute\AttributeForWorkflow;
 use Throwable;
 
 #[\Attribute(\Attribute::TARGET_CLASS)]

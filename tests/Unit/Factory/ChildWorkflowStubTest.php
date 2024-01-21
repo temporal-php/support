@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Temporal\Sugar\Tests\Unit\Factory;
+namespace Temporal\Support\Tests\Unit\Factory;
 
 use LogicException;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 use Temporal\Client\WorkflowOptions;
-use Temporal\Sugar\Factory\WorkflowStub;
-use Temporal\Sugar\Tests\Stub\Workflow\AttributedWithoutInterface;
+use Temporal\Support\Factory\WorkflowStub;
+use Temporal\Support\Tests\Stub\Workflow\AttributedWithoutInterface;
 use Temporal\Workflow;
 
 final class ChildWorkflowStubTest extends TestCase

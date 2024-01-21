@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Temporal\Sugar\Factory;
+namespace Temporal\Support\Factory;
 
 use DateInterval;
 use Temporal\Client\WorkflowClientInterface;
@@ -10,12 +10,12 @@ use Temporal\Client\WorkflowOptions;
 use Temporal\Common\IdReusePolicy;
 use Temporal\Internal\Client\WorkflowProxy;
 use Temporal\Internal\Workflow\ChildWorkflowProxy;
-use Temporal\Sugar\Attribute\RetryPolicy;
-use Temporal\Sugar\Attribute\TaskQueue;
-use Temporal\Sugar\Internal\Attribute\AttributeCollection;
-use Temporal\Sugar\Internal\Attribute\AttributeForWorkflow;
-use Temporal\Sugar\Internal\Attribute\AttributeReader;
-use Temporal\Sugar\Internal\RetryOptions;
+use Temporal\Support\Attribute\RetryPolicy;
+use Temporal\Support\Attribute\TaskQueue;
+use Temporal\Support\Internal\Attribute\AttributeCollection;
+use Temporal\Support\Internal\Attribute\AttributeForWorkflow;
+use Temporal\Support\Internal\Attribute\AttributeReader;
+use Temporal\Support\Internal\RetryOptions;
 use Temporal\Workflow;
 use Temporal\Workflow\ChildWorkflowCancellationType as ChildCancelType;
 use Temporal\Workflow\ParentClosePolicy;

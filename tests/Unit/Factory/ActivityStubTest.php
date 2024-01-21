@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Temporal\Sugar\Tests\Unit\Factory;
+namespace Temporal\Support\Tests\Unit\Factory;
 
 use LogicException;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
-use Temporal\Sugar\Factory\ActivityStub;
-use Temporal\Sugar\Tests\Stub\Activity\AttributedWithoutInterface;
+use Temporal\Support\Factory\ActivityStub;
+use Temporal\Support\Tests\Stub\Activity\AttributedWithoutInterface;
 use Temporal\Workflow;
 
 final class ActivityStubTest extends TestCase

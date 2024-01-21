@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Temporal\Sugar\Tests\Stub\Workflow;
+namespace Temporal\Support\Tests\Stub\Workflow;
 
 use RuntimeException;
-use Temporal\Sugar\Attribute\RetryPolicy;
-use Temporal\Sugar\Attribute\TaskQueue;
+use Temporal\Support\Attribute\RetryPolicy;
+use Temporal\Support\Attribute\TaskQueue;
 use Temporal\Workflow\WorkflowInterface;
 use Temporal\Workflow\WorkflowMethod;
 

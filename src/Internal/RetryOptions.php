@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Temporal\Sugar\Internal;
+namespace Temporal\Support\Internal;
 
 use DateInterval;
-use Temporal\Sugar\Attribute\RetryPolicy as RetryPolicyAttribute;
+use Temporal\Support\Attribute\RetryPolicy as RetryPolicyAttribute;
 use Throwable;
 
 /**

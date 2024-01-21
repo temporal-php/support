@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Temporal\Sugar;
+namespace Temporal\Support;
 
 use React\Promise\PromiseInterface;
 

@@ -1,5 +1,5 @@
 {
-    "name": "temporal-php/sugar",
+    "name": "temporal-php/support",
     "type": "library",
     "license": "MIT",
     "description": "Helpers that simplify working with the Temporal PHP SDK",
@@ -16,12 +16,12 @@
     ],
     "autoload": {
         "psr-4": {
-            "Temporal\\Sugar\\": "src/"
+            "Temporal\\Support\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Temporal\\Sugar\\Tests\\": "tests/"
+            "Temporal\\Support\\Tests\\": "tests/"
         }
     },
     "funding": [

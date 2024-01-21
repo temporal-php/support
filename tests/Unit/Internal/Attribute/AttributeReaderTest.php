@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Temporal\Sugar\Tests\Unit\Internal\Attribute;
+namespace Temporal\Support\Tests\Unit\Internal\Attribute;
 
 use PHPUnit\Framework\TestCase;
-use Temporal\Sugar\Attribute\TaskQueue;
-use Temporal\Sugar\Internal\Attribute\AttributeReader;
-use Temporal\Sugar\Tests\Unit\Internal\Attribute;
+use Temporal\Support\Attribute\TaskQueue;
+use Temporal\Support\Internal\Attribute\AttributeReader;
+use Temporal\Support\Tests\Unit\Internal\Attribute;
 
 class AttributeReaderTest extends TestCase
 {
