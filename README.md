@@ -32,13 +32,48 @@ composer require temporal-php/support
 
 ### Activity and Worker factories
 
+
+
+### Attributes
+
+Attributes can be used on Workflow or Activity definitions to set default stub options.
+
+```php
+#[\Temporal\Support\Attribute\TaskQueue('my-task-queue')]
+#[\Temporal\Support\Attribute\RetryPolicy(attempts: 5)]
+#[WorkflowInterface]
+interface HelloWorkflow {
+    #[WorkflowMethod]
+    public function greet(string $name);
+}
+
+$stub = \Temporal\Support\Factory\WorkflowStub::workflow($client, HelloWorkflow::class);
+
+// TaskQueue is now set to 'my-task-queue' and RetryPolicy to 5 attempts
+$stub->greet('User');
+
+// You can override the default options
+$stub = \Temporal\Support\Factory\WorkflowStub::workflow(
+    $client,
+    HelloWorkflow::class,
+    taskQueue: 'another-task-queue',
+    retryAttempts: 1,
+)->greet('User');
+```
+
+> [!NOTE]
+> Attributes will work only if you use the Activity and Worker factories from this package.
+
 ### VirtualPromise interface
 
 Every time we use `yield` in a Workflow to wait for an action to complete, a Promise is actually yielded.
 At this point, the IDE and static analyzer usually get lost in type definitions,
 and we experience difficulties and inconveniences because of this.
-However, if the Promise interface had the `@yield` annotation, we could explain to the IDE what type of value we expect to be sent back into the generator from the coroutine.
-Since ReactPHP [isn't yet planning](https://github.com/orgs/reactphp/discussions/536) to add the `@yield` annotation to their promises (Temporal PHP uses ReactPHP promises),
+However, if the Promise interface had the `@yield` annotation,
+we could explain to the IDE what type of value we expect to be sent back into the generator from the coroutine.
+Since ReactPHP [isn't yet planning](https://github.com/orgs/reactphp/discussions/536)
+to add the `@yield` annotation to their promises
+(Temporal PHP uses ReactPHP promises),
 we suggest using our solution for typing - `VirtualPromise`.
 
 ```php
@@ -69,11 +104,11 @@ class WorkflowClass {
 }
 ```
 
-> Warning: don't implement the `VirtualPromise` interface yourself, use it only as a type hint.
+> [!WARNING]
+> don't implement the `VirtualPromise` interface yourself, use it only as a type hint.
 
-> PHPStorm and Psalm can handle the @yield annotation, but PHPStan can't yet ([issue](https://github.com/phpstan/phpstan/issues/4245)).
-
-### Attributes
+> [!NOTE]
+> PHPStorm and Psalm can handle the `@yield` annotation, but PHPStan can't yet ([issue](https://github.com/phpstan/phpstan/issues/4245)).
 
 ## Contributing
 
