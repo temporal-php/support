@@ -34,6 +34,45 @@ composer require temporal-php/support
 
 ### VirtualPromise interface
 
+Every time we use `yield` in a Workflow to wait for an action to complete, a Promise is actually yielded.
+At this point, the IDE and static analyzer usually get lost in type definitions,
+and we experience difficulties and inconveniences because of this.
+However, if the Promise interface had the `@yield` annotation, we could explain to the IDE what type of value we expect to be sent back into the generator from the coroutine.
+Since ReactPHP [isn't yet planning](https://github.com/orgs/reactphp/discussions/536) to add the `@yield` annotation to their promises (Temporal PHP uses ReactPHP promises),
+we suggest using our solution for typing - `VirtualPromise`.
+
+```php
+use Temporal\Support\VirtualPromise;
+
+#[\Temporal\Activity\ActivityInterface]
+class HelloService {
+    /**
+     * @param non-empty-string $name
+     *
+     * @return VirtualPromise<non-empty-string>
+     */
+    public function greet(string $name) {
+        // ...
+    }
+}
+
+#[\Temporal\Workflow\WorkflowInterface]
+class WorkflowClass {
+    #[\Temporal\Workflow\WorkflowMethod]
+    public function run(string $name) {
+        $activity = \Temporal\Support\Factory\ActivityStub::activity(HelloService::class);
+
+        // IDE will know that $name is a non-empty-string
+        $name = yield $activity->greet($name);
+        // ...
+    }
+}
+```
+
+> Warning: don't implement the `VirtualPromise` interface yourself, use it only as a type hint.
+
+> PHPStorm and Psalm can handle the @yield annotation, but PHPStan can't yet ([issue](https://github.com/phpstan/phpstan/issues/4245)).
+
 ### Attributes
 
 ## Contributing
