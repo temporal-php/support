@@ -11,6 +11,9 @@ etc. to enhance the developer experience when using the [Temporal PHP SDK](https
 
 - [Installation](#installation)
 - [Usage](#usage)
+  - [Factories](#factories)
+  - [Attributes](#attributes)
+  - [VirtualPromise interface](#virtualpromise-interface)
 - [Contributing](#contributing)
 
 ## Installation
