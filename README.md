@@ -30,9 +30,69 @@ composer require temporal-php/support
 
 ## Usage
 
-### Activity and Worker factories
+### Factories
 
+The package provides factories to create Activity and Worker stubs in a more convenient way.
+With these factories, there is less code because all nested options are moved to the parameters of one method.
 
+Use the `\Temporal\Support\Factory\ActivityStub` factory to create an Activity stub:
+
+```php
+use \Temporal\Support\Factory\ActivityStub;
+
+#[\Temporal\Workflow\WorkflowInterface]
+class HelloWorkflow {
+    #[\Temporal\Workflow\WorkflowMethod]
+    public function run(string $user) {
+        yield ActivityStub::activity(
+            class: UserService::class,
+            startToCloseTimeout: 60,
+            retryAttempts: 5,
+        )->getContactEmail($user)->then(
+            fn (string $email) => ActivityStub::activity(
+                class: HelloService::class,
+                startToCloseTimeout: '10 minutes',
+                retryAttempts: 5,
+            )->sendHelloEmail($user, $email),
+        );
+    }
+}
+```
+
+Use the `\Temporal\Support\Factory\WorkflowStub` factory to create a Workflow stub in a client scope:
+
+```php
+use \Temporal\Support\Factory\WorkflowStub;
+/**
+ * @var \Temporal\Client\WorkflowClient $client
+ */
+$stub = WorkflowStub::workflow($client, HelloWorkflow::class, executionTimeout: '1 day');
+$run = $client->start($stub, 'User');
+// ...
+```
+
+Or create a Child Workflow stub in a workflow scope:
+
+```php
+use \Temporal\Support\Factory\WorkflowStub;
+
+#[\Temporal\Workflow\WorkflowInterface]
+class RegisterWorkflow {
+    #[\Temporal\Workflow\WorkflowMethod]
+    public function run(string $user) {
+        yield \Temporal\Promise::all([
+            WorkflowStub::childWorkflow(GreetingWorkflow::class, executionTimeout: '1 hour'),
+            WorkflowStub::childWorkflow(SubscribeNewsWorkflow::class, executionTimeout: '10 minutes'),
+            WorkflowStub::childWorkflow(PrepareUserEnvironmentWorkflow::class, executionTimeout: '1 hour'),
+        ])->then(
+            // Suppress failures
+            onRejected: static fn () => null,
+        );
+
+        // ...
+    }
+}
+```
 
 ### Attributes
 
@@ -62,7 +122,12 @@ $stub = \Temporal\Support\Factory\WorkflowStub::workflow(
 ```
 
 > [!NOTE]
-> Attributes will work only if you use the Activity and Worker factories from this package.
+> Attributes will work only if you use the Activity and Worker factories from this package.  
+
+> [!WARNING]
+> Use attributes on the definitions that you use in factories.
+> So, if you separate interfaces and implementation, apply attributes to the interfaces.
+
 
 ### VirtualPromise interface
 
