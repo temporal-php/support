@@ -30,7 +30,7 @@
     "prefer-stable": true,
     "require": {
         "php": ">=8.1",
-        "temporal/sdk": "^2.8"
+        "temporal/sdk": "^2.15"
     },
     "suggest": {
         "buggregator/trap": "For better debugging and protobuf messages dumping"
