@@ -42,8 +42,8 @@ final class WorkflowStubTest extends TestCase
             [RuntimeException::class],
             $input->options->retryOptions->nonRetryableExceptions,
         );
-        self::assertSame('5.0', $input->options->retryOptions->initialInterval->format('%s.%f'));
-        self::assertSame('500.0', $input->options->retryOptions->maximumInterval->format('%s.%f'));
+        self::assertSame('0.5.0', $input->options->retryOptions->initialInterval->format('%i.%s.%f'));
+        self::assertSame('8.20.0', $input->options->retryOptions->maximumInterval->format('%i.%s.%f'));
     }
 
     public function testAttributeOverrides(): void
@@ -79,8 +79,8 @@ final class WorkflowStubTest extends TestCase
             [LogicException::class, RuntimeException::class],
             $input->options->retryOptions->nonRetryableExceptions,
         );
-        self::assertSame('10.0', $input->options->retryOptions->initialInterval->format('%s.%f'));
-        self::assertSame('200.0', $input->options->retryOptions->maximumInterval->format('%s.%f'));
+        self::assertSame('0.10.0', $input->options->retryOptions->initialInterval->format('%i.%s.%f'));
+        self::assertSame('3.20.0', $input->options->retryOptions->maximumInterval->format('%i.%s.%f'));
     }
 
     public function testUntypedWorkflowCreated(): void

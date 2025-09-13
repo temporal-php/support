@@ -8,10 +8,6 @@
         {
             "name": "Aleksei Gagarin (roxblnfk)",
             "homepage": "https://github.com/roxblnfk"
-        },
-        {
-            "name": "Pavel Buchnev (butschster)",
-            "homepage": "https://github.com/butschster"
         }
     ],
     "autoload": {
@@ -28,10 +24,6 @@
         {
             "type": "patreon",
             "url": "https://patreon.com/roxblnfk"
-        },
-        {
-            "type": "patreon",
-            "url": "https://patreon.com/butschster"
         }
     ],
     "minimum-stability": "dev",
@@ -47,13 +39,31 @@
         "buggregator/trap": "^1.4",
         "dereuromark/composer-prefer-lowest": "^0.1.10",
         "phpunit/phpunit": "^10.5",
-        "vimeo/psalm": "^5.23",
-        "pestphp/pest": "^2.34",
-        "pestphp/pest-plugin-arch": "^2.7"
+        "spiral/code-style": "^2.3.0",
+        "ta-tikoma/phpunit-architecture-test": "^0.8.4",
+        "vimeo/psalm": "^6.13"
     },
     "config": {
         "allow-plugins": {
             "pestphp/pest-plugin": false
         }
+    },
+    "scripts": {
+        "cs:diff": "php-cs-fixer fix --dry-run -v --diff",
+        "cs:fix": "php-cs-fixer fix -v",
+        "psalm": "psalm",
+        "psalm:baseline": "psalm --set-baseline=psalm-baseline.xml",
+        "psalm:ci": "psalm --output-format=github --shepherd --show-info=false --stats --threads=4",
+        "test": [
+            "phpunit --color=always --no-coverage"
+        ],
+        "test:unit": [
+            "@putenv XDEBUG_MODE=coverage",
+            "phpunit --color=always --testsuite=Unit"
+        ],
+        "test:arch": [
+            "@putenv XDEBUG_MODE=coverage",
+            "phpunit --color=always --testsuite=Arch"
+        ]
     }
 }

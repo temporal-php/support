@@ -40,8 +40,8 @@ final class ChildWorkflowStubTest extends TestCase
         $this->assertSame(3, $options->retryOptions->maximumAttempts);
         $this->assertSame(10.0, $options->retryOptions->backoffCoefficient);
         $this->assertSame([RuntimeException::class], $options->retryOptions->nonRetryableExceptions);
-        $this->assertSame('5.0', $options->retryOptions->initialInterval->format('%s.%f'));
-        $this->assertSame('500.0', $options->retryOptions->maximumInterval->format('%s.%f'));
+        $this->assertSame('0.5.0', $options->retryOptions->initialInterval->format('%i.%s.%f'));
+        $this->assertSame('8.20.0', $options->retryOptions->maximumInterval->format('%i.%s.%f'));
     }
 
     public function testAttributeOverrides(): void
@@ -64,8 +64,8 @@ final class ChildWorkflowStubTest extends TestCase
             [LogicException::class, RuntimeException::class],
             $options->retryOptions->nonRetryableExceptions,
         );
-        $this->assertSame('10.0', $options->retryOptions->initialInterval->format('%s.%f'));
-        $this->assertSame('200.0', $options->retryOptions->maximumInterval->format('%s.%f'));
+        $this->assertSame('0.10.0', $options->retryOptions->initialInterval->format('%i.%s.%f'));
+        $this->assertSame('3.20.0', $options->retryOptions->maximumInterval->format('%i.%s.%f'));
     }
 
     public function testUntypedChildCreated(): void

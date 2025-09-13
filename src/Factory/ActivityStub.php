@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Temporal\Support\Factory;
 
-use DateInterval;
 use Temporal\Activity\ActivityOptions;
 use Temporal\Internal\Workflow\ActivityProxy;
 use Temporal\Support\Attribute\RetryPolicy;
@@ -15,7 +14,6 @@ use Temporal\Support\Internal\Attribute\AttributeReader;
 use Temporal\Support\Internal\RetryOptions;
 use Temporal\Workflow;
 use Temporal\Workflow\ActivityStubInterface;
-use Throwable;
 
 final class ActivityStub
 {
@@ -29,29 +27,28 @@ final class ActivityStub
      * @param int<0, max>|null $retryAttempts Maximum number of attempts. When exceeded the retries stop even
      *        if not expired yet. If not set or set to 0, it means unlimited, and rely on activity
      *        {@see ActivityOptions::$scheduleToCloseTimeout} to stop.
-     * @param DateInterval|string|int|null $retryInitInterval Backoff interval for the first retry.
+     * @param \DateInterval|string|int|null $retryInitInterval Backoff interval for the first retry.
      *        If $retryBackoff is 1.0 then it is used for all retries.
      *        Int value in seconds.
-     * @param DateInterval|string|int|null $retryMaxInterval Maximum backoff interval between retries.
+     * @param \DateInterval|string|int|null $retryMaxInterval Maximum backoff interval between retries.
      *        Exponential backoff leads to interval increase. This value is the cap of the interval.
      *        Int value in seconds.
      *        Default is 100x of $retryInitInterval.
      * @param float|null $retryBackoff Coefficient used to calculate the next retry backoff interval.
      *        The next retry interval is previous interval multiplied by this coefficient.
      *        Note: Must be greater than 1.0
-     * @param list<class-string<Throwable>> $nonRetryables Non-retriable errors. Temporal server will stop retry
+     * @param list<class-string<\Throwable>> $nonRetryables Non-retriable errors. Temporal server will stop retry
      *        if error type matches this list.
-     * @param DateInterval|string|int $scheduleToStartTimeout Time activity can stay in task queue before it
+     * @param \DateInterval|string|int $scheduleToStartTimeout Time activity can stay in task queue before it
      *        is picked up by a worker. If $scheduleToCloseTimeout is not provided then
      *        both this and $startToCloseTimeout are required.
-     * @param DateInterval|string|int $startToCloseTimeout Maximum activity execution time after it was sent
+     * @param \DateInterval|string|int $startToCloseTimeout Maximum activity execution time after it was sent
      *        to a worker. If $scheduleToCloseTimeout is not provided then both this
      *        and $scheduleToStartTimeout are required.
-     * @param DateInterval|string|int $scheduleToCloseTimeout Overall timeout workflow is willing to wait for
+     * @param \DateInterval|string|int $scheduleToCloseTimeout Overall timeout workflow is willing to wait for
      *        activity to complete. It includes time in a task queue ($scheduleToStartTimeout) plus activity
      *        execution time ($startToCloseTimeout).
      *        Either this option or both $scheduleToStartTimeout and $startToCloseTimeout are required.
-     * @param DateInterval|string|int $heartbeatTimeout
      * @param \Stringable|non-empty-string|null $activityId Business level activity ID, this is not needed
      *        for most of the cases. If you have to specify this, then talk to the temporal team.
      *        This is something will be done in the future.
@@ -99,7 +96,7 @@ final class ActivityStub
         $scheduleToCloseTimeout === 0 or $options = $options->withScheduleToCloseTimeout($scheduleToCloseTimeout);
         $heartbeatTimeout === 0 or $options = $options->withHeartbeatTimeout($heartbeatTimeout);
         // Activity ID
-        $activityId === null or $options = $options->withActivityId((string)$activityId);
+        $activityId === null or $options = $options->withActivityId((string) $activityId);
         $cancellationType === 0 or $options = $options->withCancellationType($cancellationType);
 
         return $class === null
