@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Temporal\Support\Factory;
 
-use DateInterval;
 use Temporal\Client\WorkflowClientInterface;
 use Temporal\Client\WorkflowOptions;
 use Temporal\Client\WorkflowStubInterface;
 use Temporal\Common\IdReusePolicy;
+use Temporal\Common\Priority;
+use Temporal\Common\TypedSearchAttributes;
+use Temporal\Common\WorkflowIdConflictPolicy;
 use Temporal\Internal\Client\WorkflowProxy;
 use Temporal\Internal\Workflow\ChildWorkflowProxy;
 use Temporal\Support\Attribute\RetryPolicy;
@@ -21,7 +23,6 @@ use Temporal\Workflow;
 use Temporal\Workflow\ChildWorkflowCancellationType as ChildCancelType;
 use Temporal\Workflow\ChildWorkflowStubInterface;
 use Temporal\Workflow\ParentClosePolicy;
-use Throwable;
 
 final class WorkflowStub
 {
@@ -35,30 +36,30 @@ final class WorkflowStub
      * @param int<0, max>|null $retryAttempts Maximum number of attempts. When exceeded the retries stop even
      *        if not expired yet. If not set or set to 0, it means unlimited, and rely on activity
      *        {@see ActivityOptions::$scheduleToCloseTimeout} to stop.
-     * @param DateInterval|string|int|null $retryInitInterval Backoff interval for the first retry.
+     * @param \DateInterval|string|int|null $retryInitInterval Backoff interval for the first retry.
      *        If $retryBackoff is 1.0 then it is used for all retries.
      *        Int value in seconds.
-     * @param DateInterval|string|int|null $retryMaxInterval Maximum backoff interval between retries.
+     * @param \DateInterval|string|int|null $retryMaxInterval Maximum backoff interval between retries.
      *        Exponential backoff leads to interval increase. This value is the cap of the interval.
      *        Int value in seconds.
      *        Default is 100x of $retryInitInterval.
      * @param float|null $retryBackoff Coefficient used to calculate the next retry backoff interval.
      *        The next retry interval is previous interval multiplied by this coefficient.
      *        Note: Must be greater than 1.0
-     * @param list<class-string<Throwable>> $nonRetryables Non-retriable errors. Temporal server will stop retry
+     * @param list<class-string<\Throwable>> $nonRetryables Non-retriable errors. Temporal server will stop retry
      *        if error type matches this list.
-     * @param DateInterval|string|int $executionTimeout The maximum time that parent workflow is willing to wait
+     * @param \DateInterval|string|int $executionTimeout The maximum time that parent workflow is willing to wait
      *        for a child execution (which includes retries and continue as new calls).
      *        If exceeded the child is automatically terminated by the Temporal service.
      *        Int value in seconds.
-     * @param DateInterval|string|int $runTimeout The time after which workflow run is automatically terminated by
+     * @param \DateInterval|string|int $runTimeout The time after which workflow run is automatically terminated by
      *        the Temporal service.
      *        Do not rely on the run timeout for business level timeouts.
      *        It is preferred to use in workflow timers for this purpose.
      *        Int value in seconds.
      * @param int<10, 60> $taskTimeout Maximum execution time of a single workflow task. Int value in seconds.
      *        Default is 10 seconds. The maximum accepted value is 60 seconds.
-     * @param DateInterval|string|int $startDelay Time to wait before dispatching the first Workflow task.
+     * @param \DateInterval|string|int $startDelay Time to wait before dispatching the first Workflow task.
      *        If the Workflow gets a Signal before the delay, a Workflow task will be dispatched and the rest
      *        of the delay will be ignored. A Signal from {@see WorkflowClientInterface::startWithSignal()}
      *        won't trigger a workflow task. Cannot be set the same time as a $cronSchedule.
@@ -98,6 +99,11 @@ final class WorkflowStub
         ?string $cronSchedule = null,
         array $searchAttributes = [],
         array $memo = [],
+        ?TypedSearchAttributes $typedSearchAttributes = null,
+        WorkflowIdConflictPolicy $idConflictPolicy = WorkflowIdConflictPolicy::Unspecified,
+        ?Priority $priority = null,
+        string $staticSummary = '',
+        string $staticDetails = '',
     ): object {
         $isTyped = self::isClassOrInterface($type);
         /** @psalm-suppress ArgumentTypeCoercion */
@@ -115,21 +121,32 @@ final class WorkflowStub
             attribute: $attributes->first(RetryPolicy::class),
         );
 
-        $options = WorkflowOptions::new()->withRetryOptions($retryOptions);
+        $options = WorkflowOptions::new()
+            ->withRetryOptions($retryOptions)
+            ->withStaticSummary($staticSummary)
+            ->withStaticDetails($staticDetails);
+        ;
         $taskQueue ??= $attributes->first(TaskQueue::class)?->name;
         $taskQueue === null or $options = $options->withTaskQueue($taskQueue);
         // Start options
         $startDelay === 0 or $options = $options->withWorkflowStartDelay($startDelay);
         $eagerStart and $options = $options->withEagerStart(true);
         $cronSchedule === null or $options = $options->withCronSchedule($cronSchedule);
+        $priority === null or $options = $options->withPriority($priority);
+        $typedSearchAttributes === null or $options = $options->withTypedSearchAttributes($typedSearchAttributes);
+
         // Timeouts
         $executionTimeout === 0 or $options = $options->withWorkflowExecutionTimeout($executionTimeout);
         $runTimeout === 0 or $options = $options->withWorkflowRunTimeout($executionTimeout);
         $taskTimeout !== 10 and $options = $options->withWorkflowTaskTimeout(\max(60, $taskTimeout));
+
         // Workflow ID
-        $workflowId === null or $options = $options->withWorkflowId((string)$workflowId);
+        $workflowId === null or $options = $options->withWorkflowId((string) $workflowId);
         $workflowIdReusePolicy === IdReusePolicy::Unspecified or $options = $options
             ->withWorkflowIdReusePolicy($workflowIdReusePolicy);
+        $idConflictPolicy === WorkflowIdConflictPolicy::Unspecified or $options = $options
+            ->withWorkflowIdConflictPolicy($idConflictPolicy);
+
         // Metadata
         $searchAttributes === [] or $options = $options->withSearchAttributes($searchAttributes);
         $memo === [] or $options = $options->withMemo($memo);
@@ -152,23 +169,23 @@ final class WorkflowStub
      * @param int<0, max>|null $retryAttempts Maximum number of attempts. When exceeded the retries stop even
      *        if not expired yet. If not set or set to 0, it means unlimited, and rely on activity
      *        {@see ActivityOptions::$scheduleToCloseTimeout} to stop.
-     * @param DateInterval|string|int|null $retryInitInterval Backoff interval for the first retry.
+     * @param \DateInterval|string|int|null $retryInitInterval Backoff interval for the first retry.
      *        If $retryBackoff is 1.0 then it is used for all retries.
      *        Int value in seconds.
-     * @param DateInterval|string|int|null $retryMaxInterval Maximum backoff interval between retries.
+     * @param \DateInterval|string|int|null $retryMaxInterval Maximum backoff interval between retries.
      *        Exponential backoff leads to interval increase. This value is the cap of the interval.
      *        Int value in seconds.
      *        Default is 100x of $retryInitInterval.
      * @param float|null $retryBackoff Coefficient used to calculate the next retry backoff interval.
      *        The next retry interval is previous interval multiplied by this coefficient.
      *        Note: Must be greater than 1.0
-     * @param list<class-string<Throwable>> $nonRetryables Non-retriable errors. Temporal server will stop retry
+     * @param list<class-string<\Throwable>> $nonRetryables Non-retriable errors. Temporal server will stop retry
      *        if error type matches this list.
-     * @param DateInterval|string|int $executionTimeout The maximum time that parent workflow is willing to wait
+     * @param \DateInterval|string|int $executionTimeout The maximum time that parent workflow is willing to wait
      *        for a child execution (which includes retries and continue as new calls).
      *        If exceeded the child is automatically terminated by the Temporal service.
      *        Int value in seconds.
-     * @param DateInterval|string|int $runTimeout The time after which workflow run is automatically terminated by
+     * @param \DateInterval|string|int $runTimeout The time after which workflow run is automatically terminated by
      *        the Temporal service.
      *        Do not rely on the run timeout for business level timeouts.
      *        It is preferred to use in workflow timers for this purpose.
@@ -209,6 +226,9 @@ final class WorkflowStub
         ?string $cronSchedule = null,
         array $searchAttributes = [],
         array $memo = [],
+        ?Priority $priority = null,
+        string $staticSummary = '',
+        string $staticDetails = '',
     ): object {
         $isTyped = self::isClassOrInterface($type);
         /** @psalm-suppress ArgumentTypeCoercion */
@@ -226,7 +246,10 @@ final class WorkflowStub
             attribute: $attributes->first(RetryPolicy::class),
         );
 
-        $options = Workflow\ChildWorkflowOptions::new()->withRetryOptions($retryOptions);
+        $options = Workflow\ChildWorkflowOptions::new()
+            ->withRetryOptions($retryOptions)
+            ->withStaticSummary($staticSummary)
+            ->withStaticDetails($staticDetails);
 
         $taskQueue ??= $attributes->first(TaskQueue::class)?->name;
         $taskQueue === null or $options = $options->withTaskQueue($taskQueue);
@@ -237,15 +260,17 @@ final class WorkflowStub
             ->withParentClosePolicy($parentClosePolicy);
         $childCancellationType === ChildCancelType::TRY_CANCEL or $options = $options
             ->withChildWorkflowCancellationType($childCancellationType);
+        $priority === null or $options = $options->withPriority($priority);
 
         // Timeouts
         $executionTimeout === 0 or $options = $options->withWorkflowExecutionTimeout($executionTimeout);
         $runTimeout === 0 or $options = $options->withWorkflowRunTimeout($executionTimeout);
         $taskTimeout !== 10 and $options = $options->withWorkflowTaskTimeout(\max(60, $taskTimeout));
         // Workflow ID
-        $workflowId === null or $options = $options->withWorkflowId((string)$workflowId);
+        $workflowId === null or $options = $options->withWorkflowId((string) $workflowId);
         $workflowIdReusePolicy === IdReusePolicy::Unspecified or $options = $options
             ->withWorkflowIdReusePolicy($workflowIdReusePolicy);
+
         // Metadata
         $searchAttributes === [] or $options = $options->withSearchAttributes($searchAttributes);
         $memo === [] or $options = $options->withMemo($memo);

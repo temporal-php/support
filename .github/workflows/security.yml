@@ -31,33 +31,30 @@ jobs:
       fail-fast: false
       matrix:
         # Note: This workflow requires only the LATEST version of PHP
-        php: [ 8.2 ]
-        os: [ ubuntu-latest ]
+        os:
+          - ubuntu-latest
+        php-version:
+          - '8.2'
+        dependencies:
+          - locked
     steps:
-      - name: Set up PHP ${{ matrix.php }}
+      - name: 📦 Check out the codebase
+        uses: actions/checkout@v5
+
+      - name: 🛠️ Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ matrix.php }}
-          extensions: dom, sockets, grpc, curl
+          php-version: ${{ matrix.php-version }}
+          ini-values: error_reporting=E_ALL
+          coverage: none
 
-      - name: Check Out Code
-        uses: actions/checkout@v4
+      - name: 🤖 Validate composer.json and composer.lock
+        run: composer validate --ansi --strict
+
+      - name: 📥 Install dependencies with composer
+        uses: ramsey/composer-install@v3
         with:
-          fetch-depth: 1
+          dependency-versions: ${{ matrix.dependencies }}
 
-      - name: Get Composer Cache Directory
-        id: composer-cache
-        run: echo "::set-output name=dir::$(composer config cache-files-dir)"
-
-      - name: Cache Dependencies
-        uses: actions/cache@v3
-        with:
-          path: ${{ steps.composer-cache.outputs.dir }}
-          key: php-${{ matrix.php }}-${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
-          restore-keys: php-${{ matrix.php }}-${{ runner.os }}-composer-
-
-      - name: Install Composer Dependencies
-        run: composer install --prefer-dist --no-interaction
-
-      - name: Verify
-        run: composer require --dev roave/security-advisories:dev-latest
+      - name: 🐛 Check installed packages for security vulnerability advisories
+        run: composer audit --ansi

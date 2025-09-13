@@ -3,6 +3,7 @@
          xsi:noNamespaceSchemaLocation="./vendor/phpunit/phpunit/phpunit.xsd"
          backupGlobals="false"
          colors="true"
+         cacheResultFile="runtime/phpunit/result.cache"
          processIsolation="false"
          executionOrder="random"
          failOnRisky="true"
@@ -10,8 +11,8 @@
          stopOnFailure="false"
          stopOnError="false"
          stderr="true"
-         cacheDirectory=".phpunit.cache"
          resolveDependencies="true"
+         displayDetailsOnTestsThatTriggerDeprecations="true"
 >
     <testsuites>
         <testsuite name="Unit">
